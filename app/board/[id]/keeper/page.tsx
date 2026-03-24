@@ -119,8 +119,9 @@ export default function KeeperPage() {
         return;
       }
       recordStat(stat);
+      selectPlayer(null); // back to roster for fast entry
     },
-    [selectedPlayerId, recordStat]
+    [selectedPlayerId, recordStat, selectPlayer]
   );
 
   // Handle shot location selected
@@ -132,8 +133,9 @@ export default function KeeperPage() {
       recordStat(pendingStat, loc);
       setShowCourt(false);
       setPendingStat(null);
+      selectPlayer(null); // back to roster
     },
-    [pendingStat, recordStat]
+    [pendingStat, recordStat, selectPlayer]
   );
 
   // Skip shot location
@@ -143,7 +145,8 @@ export default function KeeperPage() {
     }
     setShowCourt(false);
     setPendingStat(null);
-  }, [pendingStat, recordStat]);
+    selectPlayer(null); // back to roster
+  }, [pendingStat, recordStat, selectPlayer]);
 
   // Undo with Supabase delete
   const handleUndo = useCallback(() => {
