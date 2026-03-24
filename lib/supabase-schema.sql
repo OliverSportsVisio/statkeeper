@@ -56,6 +56,9 @@ create policy "Anyone can create boards" on boards for insert with check (true);
 -- Anyone can update boards (keeper/admin token checked in app layer)
 create policy "Anyone can update boards" on boards for update using (true);
 
+-- Anyone can delete boards
+create policy "Anyone can delete boards" on boards for delete using (true);
+
 -- Anyone can insert events
 create policy "Anyone can insert events" on game_events for insert with check (true);
 
