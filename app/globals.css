@@ -1,0 +1,268 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-body), "Barlow", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: var(--font-mono), "Courier New", monospace;
+}
+
+:root {
+  color-scheme: dark;
+
+  /* Core palette — V League Gold */
+  --bg-base: #0A0A0F;
+  --bg-surface: rgba(255, 255, 255, 0.03);
+  --bg-surface-hover: rgba(255, 255, 255, 0.06);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-medium: rgba(255, 255, 255, 0.12);
+  --text-primary: #EAEDF0;
+  --text-secondary: #B0B7C0;
+  --text-muted: #828A96;
+  --accent: #FEC679;
+  --accent-end: #FFE4A0;
+  --gold: #FEC679;
+  --green: #42F566;
+  --red: #FF5C5C;
+  --yellow: #FF9F43;
+
+  /* Design tokens */
+  --card-radius: 0.5rem;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-secondary);
+  font-family: var(--font-body), "Barlow", "Helvetica Neue", Arial, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Subtle ambient glow */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 50% 35% at 50% 0%, rgba(254, 198, 121, 0.03), transparent);
+}
+
+/* Glass card */
+.glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: var(--card-radius);
+}
+
+/* Gradient accent text */
+.gradient-text {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-end) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-family: var(--font-display), "Barlow Condensed", "Arial Narrow", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* Gradient pill button */
+.gradient-pill {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-end) 100%);
+  color: var(--bg-base);
+  transition: filter 150ms ease, box-shadow 150ms ease, transform 100ms ease;
+}
+.gradient-pill:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 4px 16px rgba(254, 198, 121, 0.35);
+}
+.gradient-pill:active {
+  transform: scale(0.97);
+  filter: brightness(0.95);
+}
+
+/* Tabular numbers */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Section header with accent bar */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.section-header::before {
+  content: "";
+  display: block;
+  width: 3px;
+  height: 1.25rem;
+  border-radius: 9999px;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+/* Hover lift for cards */
+.hover-lift {
+  transition: transform 200ms ease-out, border-color 200ms ease;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Staggered reveal animation */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-reveal {
+  animation: fadeSlideUp 0.4s ease-out both;
+}
+
+/* Focus styles */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Selection color */
+::selection {
+  background: rgba(254, 198, 121, 0.3);
+  color: var(--text-primary);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Tap-responsive base — shared by all interactive elements */
+.tap-respond {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 80ms ease-out, filter 80ms ease-out, background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+.tap-respond:active {
+  transform: scale(0.93);
+  filter: brightness(0.85);
+}
+
+/* Stat action buttons */
+.stat-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 80ms ease-out, filter 80ms ease-out, background-color 120ms ease;
+}
+.stat-btn:hover {
+  filter: brightness(1.15);
+}
+.stat-btn:active {
+  transform: scale(0.90);
+  filter: brightness(0.80);
+}
+
+/* Score button sizes */
+.score-btn {
+  min-width: 4rem;
+  min-height: 3.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 80ms ease-out, filter 80ms ease-out, box-shadow 120ms ease;
+}
+.score-btn:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 2px 12px rgba(255, 255, 255, 0.1);
+}
+.score-btn:active {
+  transform: scale(0.88);
+  filter: brightness(0.75);
+}
+
+/* Player roster row in keeper */
+.roster-row {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 80ms ease-out, filter 80ms ease-out, background-color 120ms ease, border-color 120ms ease;
+}
+.roster-row:hover {
+  filter: brightness(1.15);
+}
+.roster-row:active {
+  transform: scale(0.96);
+  filter: brightness(0.85);
+}
+
+/* Player strip chip */
+.player-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 80ms ease-out, filter 80ms ease-out, background-color 120ms ease, border-color 120ms ease;
+  border: 2px solid transparent;
+}
+.player-chip.selected {
+  border-color: var(--accent);
+  background: rgba(254, 198, 121, 0.15);
+}
+.player-chip:active {
+  transform: scale(0.92);
+  filter: brightness(0.85);
+}
+
+/* Quick action bar buttons */
+.quick-action-btn {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 80ms ease-out, filter 80ms ease-out, background-color 120ms ease;
+}
+.quick-action-btn:hover {
+  filter: brightness(1.2);
+}
+.quick-action-btn:active {
+  transform: scale(0.88);
+  filter: brightness(0.75);
+}
+
+/* Gradient pill tap feedback (nav, CTA) */
+.gradient-pill {
+  -webkit-tap-highlight-color: transparent;
+}
+.gradient-pill:active {
+  transform: scale(0.94);
+  filter: brightness(0.85);
+}
