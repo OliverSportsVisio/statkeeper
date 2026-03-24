@@ -47,7 +47,6 @@ export default function KeeperPage() {
   const [error, setError] = useState<string | null>(null);
   const clockRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const prevBoardRef = useRef<string | null>(null);
-  const prevEventsLenRef = useRef<number>(0);
 
   // Load board from Supabase (or localStorage fallback)
   useEffect(() => {
@@ -61,7 +60,8 @@ export default function KeeperPage() {
         return;
       }
       loadBoard(b, ev);
-      prevEventsLenRef.current = ev.length;
+      // Mark existing events as already synced
+      for (const e of ev) syncedEventIdsRef.current.add(e.id);
     });
   }, [id, token, loadBoard]);
 
@@ -74,16 +74,17 @@ export default function KeeperPage() {
     updateBoardState(board.id, board.state, board.status);
   }, [board?.state, board?.status, board?.id]);
 
-  // Sync new events to Supabase
+  // Sync new events to Supabase — track by Set of known IDs, not length
+  const syncedEventIdsRef = useRef<Set<string>>(new Set());
+
   useEffect(() => {
     if (!board) return;
-    if (events.length > prevEventsLenRef.current) {
-      const newEvents = events.slice(prevEventsLenRef.current);
-      for (const ev of newEvents) {
+    for (const ev of events) {
+      if (!syncedEventIdsRef.current.has(ev.id)) {
+        syncedEventIdsRef.current.add(ev.id);
         insertEvent(ev);
       }
     }
-    prevEventsLenRef.current = events.length;
   }, [events, board?.id]);
 
   // Clock ticker
@@ -148,8 +149,8 @@ export default function KeeperPage() {
   const handleUndo = useCallback(() => {
     const removed = undoLastEvent();
     if (removed && board) {
+      syncedEventIdsRef.current.delete(removed.id);
       deleteEvent(board.id, removed.id);
-      prevEventsLenRef.current = Math.max(0, prevEventsLenRef.current - 1);
     }
     return removed;
   }, [undoLastEvent, board]);
@@ -306,8 +307,7 @@ export default function KeeperPage() {
           </div>
         ) : (
           /* ── STAT ENTRY VIEW — shown after selecting a player ── */
-          <div className="px-4 py-4 max-w-xl mx-auto">
-            {/* Back to rosters button */}
+          <div className="px-4 py-4 max-w-5xl mx-auto">
             <button
               onClick={handleBack}
               className="flex items-center gap-1 text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] mb-3 transition-colors"
@@ -316,7 +316,68 @@ export default function KeeperPage() {
               <span>Back to rosters</span>
             </button>
 
-            <StatGrid onStat={handleStat} playerLabel={playerLabel} />
+            <div className="flex gap-6">
+              {/* Stat grid — left side */}
+              <div className="flex-1 min-w-0 max-w-xl">
+                <StatGrid onStat={handleStat} playerLabel={playerLabel} />
+              </div>
+
+              {/* Recent plays — right side */}
+              <div className="hidden md:block w-72 shrink-0">
+                <div className="glass-card p-4 sticky top-4">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-3">
+                    Recent Plays
+                  </h3>
+                  {events.length === 0 ? (
+                    <p className="text-[var(--text-muted)] text-xs">
+                      No plays recorded yet
+                    </p>
+                  ) : (
+                    <div className="space-y-1.5 max-h-[60vh] overflow-y-auto">
+                      {events
+                        .slice()
+                        .reverse()
+                        .slice(0, 20)
+                        .map((e) => {
+                          const team =
+                            e.team === "home" ? home_team : away_team;
+                          const player = team.players.find(
+                            (p) => p.id === e.player_id
+                          );
+                          const label = player
+                            ? `#${player.number}${player.name ? ` ${player.name}` : ""}`
+                            : "#??";
+                          const statLabel = e.stat_type
+                            .replace(/_/g, " ")
+                            .replace(/\b\w/g, (c) => c.toUpperCase());
+                          return (
+                            <div
+                              key={e.id}
+                              className="flex items-center gap-2 text-xs py-1 border-b border-[var(--border-subtle)] last:border-0"
+                            >
+                              <span
+                                className="w-1.5 h-1.5 rounded-full shrink-0"
+                                style={{ backgroundColor: team.color }}
+                              />
+                              <span className="text-[var(--text-primary)] font-medium truncate">
+                                {label}
+                              </span>
+                              <span className="text-[var(--text-muted)] truncate">
+                                {statLabel}
+                              </span>
+                              {e.points > 0 && (
+                                <span className="text-[var(--green)] font-bold ml-auto shrink-0">
+                                  +{e.points}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

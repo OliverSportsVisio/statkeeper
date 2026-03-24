@@ -7,6 +7,8 @@ import { supabase, hasSupabase } from "@/lib/supabase";
 import { deleteBoardRemote } from "@/lib/supabaseSync";
 import type { Board } from "@/lib/types";
 
+const ADMIN_PASSWORD = "SportsVisio";
+
 interface SavedBoard {
   id: string;
   home: string;
@@ -20,10 +22,20 @@ interface SavedBoard {
 }
 
 export default function HomePage() {
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [boards, setBoards] = useState<SavedBoard[]>([]);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
+  // Restore admin session
+  useEffect(() => {
+    if (sessionStorage.getItem("sk_admin") === "true") setIsAdmin(true);
+  }, []);
+
+  // Fetch boards
   useEffect(() => {
     const saved = localStorage.getItem("sk_boards");
     if (saved) {
@@ -60,6 +72,23 @@ export default function HomePage() {
     }
   }, []);
 
+  const handleLogin = () => {
+    if (password === ADMIN_PASSWORD) {
+      setIsAdmin(true);
+      setShowLogin(false);
+      setPassword("");
+      setLoginError(false);
+      sessionStorage.setItem("sk_admin", "true");
+    } else {
+      setLoginError(true);
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAdmin(false);
+    sessionStorage.removeItem("sk_admin");
+  };
+
   const handleDelete = async (boardId: string) => {
     await deleteBoardRemote(boardId);
     const updated = boards.filter((b) => b.id !== boardId);
@@ -70,6 +99,67 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen px-4 py-8 max-w-3xl mx-auto">
+      {/* Top bar — admin login */}
+      <div className="flex justify-end mb-4">
+        {isAdmin ? (
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-[var(--green)] font-semibold uppercase tracking-wider">
+              Admin
+            </span>
+            <button
+              onClick={handleLogout}
+              className="text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+            >
+              Logout
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowLogin(true)}
+            className="text-xs text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors px-3 py-1.5 rounded-lg border border-[var(--border-subtle)] hover:border-[var(--accent)]"
+          >
+            Admin Login
+          </button>
+        )}
+      </div>
+
+      {/* Login modal */}
+      {showLogin && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
+          <div className="glass-card p-6 w-full max-w-sm animate-reveal">
+            <h2 className="text-[var(--text-primary)] font-semibold text-lg mb-4">
+              Admin Login
+            </h2>
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => { setPassword(e.target.value); setLoginError(false); }}
+              onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+              autoFocus
+              className="w-full px-3 py-2 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none transition-colors mb-3"
+            />
+            {loginError && (
+              <p className="text-[var(--red)] text-xs mb-3">Incorrect password</p>
+            )}
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => { setShowLogin(false); setPassword(""); setLoginError(false); }}
+                className="px-4 py-2 rounded-lg text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleLogin}
+                className="gradient-pill px-5 py-2 rounded-lg font-semibold text-sm"
+              >
+                Login
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="text-center mb-10">
         <h1 className="gradient-text text-4xl sm:text-5xl font-bold tracking-tight mb-2">
@@ -78,60 +168,56 @@ export default function HomePage() {
         <p className="text-[var(--text-secondary)] text-lg">
           Live basketball scoreboard & stat tracking
         </p>
-        {!hasSupabase && (
-          <p className="text-[var(--text-muted)] text-xs mt-2">
-            Running in offline mode (no Supabase configured)
-          </p>
-        )}
       </div>
 
-      {/* New Board CTA */}
-      {!showForm ? (
-        <div className="text-center mb-10">
-          <button
-            onClick={() => setShowForm(true)}
-            className="gradient-pill px-8 py-3 rounded-full text-lg font-bold"
-          >
-            New Board
-          </button>
-        </div>
-      ) : (
-        <CreateBoardForm
-          onCancel={() => setShowForm(false)}
-          onCreated={(board) => {
-            const entry: SavedBoard = {
-              id: board.id,
-              home: board.home_team.name,
-              away: board.away_team.name,
-              homeScore: 0,
-              awayScore: 0,
-              status: board.status,
-              created: board.created_at,
-              adminToken: board.admin_token,
-              keeperToken: board.keeper_token,
-            };
-            const updated = [entry, ...boards];
-            setBoards(updated);
-            localStorage.setItem("sk_boards", JSON.stringify(updated));
-            setShowForm(false);
-          }}
-        />
+      {/* New Board CTA — admin only */}
+      {isAdmin && (
+        <>
+          {!showForm ? (
+            <div className="text-center mb-10">
+              <button
+                onClick={() => setShowForm(true)}
+                className="gradient-pill px-8 py-3 rounded-full text-lg font-bold"
+              >
+                New Board
+              </button>
+            </div>
+          ) : (
+            <CreateBoardForm
+              onCancel={() => setShowForm(false)}
+              onCreated={(board) => {
+                const entry: SavedBoard = {
+                  id: board.id,
+                  home: board.home_team.name,
+                  away: board.away_team.name,
+                  homeScore: 0,
+                  awayScore: 0,
+                  status: board.status,
+                  created: board.created_at,
+                  adminToken: board.admin_token,
+                  keeperToken: board.keeper_token,
+                };
+                const updated = [entry, ...boards];
+                setBoards(updated);
+                localStorage.setItem("sk_boards", JSON.stringify(updated));
+                setShowForm(false);
+              }}
+            />
+          )}
+        </>
       )}
 
-      {/* Recent boards */}
+      {/* Boards list */}
       {boards.length > 0 && (
         <section>
           <h2 className="section-header text-[var(--text-primary)] font-semibold text-lg mb-4">
-            Your Boards
+            {isAdmin ? "Your Boards" : "Games"}
           </h2>
           <div className="space-y-3">
             {boards.map((b) => (
-              <div
-                key={b.id}
-                className="glass-card hover-lift p-4"
-              >
-                {/* Delete confirmation overlay */}
-                {confirmDelete === b.id ? (
+              <div key={b.id} className="glass-card hover-lift p-4">
+                {/* Delete confirmation — admin only */}
+                {isAdmin && confirmDelete === b.id ? (
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-[var(--red)] text-sm font-medium">
                       Delete {b.home} vs {b.away}? This cannot be undone.
@@ -186,19 +272,23 @@ export default function HomePage() {
                       >
                         View
                       </Link>
-                      <Link
-                        href={`/board/${b.id}/keeper?token=${b.keeperToken}`}
-                        className="px-3 py-1.5 rounded-lg text-sm font-medium bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[var(--accent)] hover:border-[var(--accent)] transition-colors"
-                      >
-                        Keep
-                      </Link>
-                      <button
-                        onClick={() => setConfirmDelete(b.id)}
-                        className="px-2 py-1.5 rounded-lg text-sm text-[var(--text-muted)] hover:text-[var(--red)] hover:bg-[rgba(255,92,92,0.08)] transition-colors"
-                        title="Delete board"
-                      >
-                        &times;
-                      </button>
+                      {isAdmin && (
+                        <>
+                          <Link
+                            href={`/board/${b.id}/keeper?token=${b.keeperToken}`}
+                            className="px-3 py-1.5 rounded-lg text-sm font-medium bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[var(--accent)] hover:border-[var(--accent)] transition-colors"
+                          >
+                            Keep
+                          </Link>
+                          <button
+                            onClick={() => setConfirmDelete(b.id)}
+                            className="px-2 py-1.5 rounded-lg text-sm text-[var(--text-muted)] hover:text-[var(--red)] hover:bg-[rgba(255,92,92,0.08)] transition-colors"
+                            title="Delete board"
+                          >
+                            &times;
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 )}
@@ -206,6 +296,12 @@ export default function HomePage() {
             ))}
           </div>
         </section>
+      )}
+
+      {boards.length === 0 && (
+        <p className="text-center text-[var(--text-muted)] text-sm">
+          No games yet
+        </p>
       )}
     </main>
   );
