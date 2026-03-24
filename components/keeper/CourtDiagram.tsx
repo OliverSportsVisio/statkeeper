@@ -4,7 +4,7 @@ import { useCallback, useRef } from "react";
 
 interface Props {
   onSelect: (x: number, y: number) => void;
-  shots?: Array<{ x: number; y: number; made: boolean; number: string }>;
+  shots?: Array<{ x: number; y: number; made: boolean; number: string; color?: string }>;
 }
 
 export function CourtDiagram({ onSelect, shots }: Props) {
@@ -97,18 +97,20 @@ export function CourtDiagram({ onSelect, shots }: Props) {
       {shots?.map((shot, i) => {
         const sx = (shot.x / 100) * 500;
         const sy = (shot.y / 100) * 470;
+        const c = shot.color || "#EAEDF0";
         return shot.made ? (
+          /* Made = filled circle with number */
           <g key={i}>
-            <circle cx={sx} cy={sy} r="10" fill="rgba(66,245,102,0.3)" stroke="var(--green)" strokeWidth="1.5" />
-            <text x={sx} y={sy + 4} textAnchor="middle" fontSize="9" fill="var(--green)" fontWeight="bold">
+            <circle cx={sx} cy={sy} r="12" fill={c} opacity={0.9} />
+            <text x={sx} y={sy + 4} textAnchor="middle" fontSize="10" fill="#0A0A0F" fontWeight="bold">
               {shot.number}
             </text>
           </g>
         ) : (
+          /* Miss = hollow circle with number */
           <g key={i}>
-            <line x1={sx - 6} y1={sy - 6} x2={sx + 6} y2={sy + 6} stroke="var(--red)" strokeWidth="2" />
-            <line x1={sx + 6} y1={sy - 6} x2={sx - 6} y2={sy + 6} stroke="var(--red)" strokeWidth="2" />
-            <text x={sx} y={sy - 9} textAnchor="middle" fontSize="8" fill="var(--red)" fontWeight="bold">
+            <circle cx={sx} cy={sy} r="12" fill="none" stroke={c} strokeWidth="2" opacity={0.7} />
+            <text x={sx} y={sy + 4} textAnchor="middle" fontSize="10" fill={c} fontWeight="bold" opacity={0.7}>
               {shot.number}
             </text>
           </g>

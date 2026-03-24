@@ -11,9 +11,12 @@ interface Props {
   compact?: boolean;
 }
 
+type ResultFilter = "all" | "made" | "missed";
+
 export function ShotChart({ board, events, compact }: Props) {
   const [teamFilter, setTeamFilter] = useState<"all" | "home" | "away">("all");
   const [playerFilter, setPlayerFilter] = useState<string | null>(null);
+  const [resultFilter, setResultFilter] = useState<ResultFilter>("all");
 
   const allShots = extractShots(events);
 
@@ -26,6 +29,8 @@ export function ShotChart({ board, events, compact }: Props) {
   const filtered = enrichedShots.filter((s) => {
     if (teamFilter !== "all" && s.team !== teamFilter) return false;
     if (playerFilter && s.player_id !== playerFilter) return false;
+    if (resultFilter === "made" && !s.made) return false;
+    if (resultFilter === "missed" && s.made) return false;
     return true;
   });
 
@@ -34,9 +39,11 @@ export function ShotChart({ board, events, compact }: Props) {
     y: s.location.y,
     made: s.made,
     number: s.player_number,
+    color: s.team === "home" ? board.home_team.color : board.away_team.color,
   }));
 
   const made = filtered.filter((s) => s.made).length;
+  const missed = filtered.filter((s) => !s.made).length;
   const total = filtered.length;
   const fgPct = total === 0 ? 0 : Math.round((made / total) * 100);
 
@@ -45,19 +52,22 @@ export function ShotChart({ board, events, compact }: Props) {
     ...board.away_team.players.map((p) => ({ ...p, team: "away" as const })),
   ];
 
+  const pillClass = (active: boolean) =>
+    `px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+      active
+        ? "gradient-pill"
+        : "text-[var(--text-muted)] bg-[var(--bg-surface)] hover:text-[var(--text-secondary)]"
+    }`;
+
   return (
     <div className={compact ? "" : "max-w-lg mx-auto px-4 py-6"}>
-      {/* Filters */}
-      <div className="flex gap-2 mb-3 flex-wrap items-center">
+      {/* Team filters */}
+      <div className="flex gap-2 mb-2 flex-wrap items-center">
         {(["all", "home", "away"] as const).map((t) => (
           <button
             key={t}
             onClick={() => { setTeamFilter(t); setPlayerFilter(null); }}
-            className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
-              teamFilter === t
-                ? "gradient-pill"
-                : "text-[var(--text-muted)] bg-[var(--bg-surface)] hover:text-[var(--text-secondary)]"
-            }`}
+            className={pillClass(teamFilter === t)}
           >
             {t === "all" ? "All" : t === "home" ? board.home_team.name : board.away_team.name}
           </button>
@@ -76,13 +86,50 @@ export function ShotChart({ board, events, compact }: Props) {
         </select>
       </div>
 
+      {/* Make/miss filter */}
+      <div className="flex gap-2 mb-3 items-center">
+        {(
+          [
+            { key: "all", label: "All Shots" },
+            { key: "made", label: "Makes" },
+            { key: "missed", label: "Misses" },
+          ] as { key: ResultFilter; label: string }[]
+        ).map((r) => (
+          <button
+            key={r.key}
+            onClick={() => setResultFilter(r.key)}
+            className={pillClass(resultFilter === r.key)}
+          >
+            {r.label}
+          </button>
+        ))}
+
+        {/* Legend */}
+        <div className="ml-auto flex items-center gap-3 text-[10px] text-[var(--text-muted)]">
+          <span className="flex items-center gap-1">
+            <span className="inline-block w-3 h-3 rounded-full bg-[var(--text-secondary)]" />
+            Made
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="inline-block w-3 h-3 rounded-full border-2 border-[var(--text-secondary)]" />
+            Miss
+          </span>
+        </div>
+      </div>
+
       {/* Summary */}
       <div className="flex justify-center gap-6 mb-3 text-center">
         <div>
-          <div className={`font-bold text-[var(--text-primary)] tabular-nums ${compact ? "text-lg" : "text-2xl"}`}>
-            {made}/{total}
+          <div className={`font-bold text-[var(--green)] tabular-nums ${compact ? "text-lg" : "text-2xl"}`}>
+            {made}
           </div>
-          <div className="text-xs text-[var(--text-muted)]">FG</div>
+          <div className="text-xs text-[var(--text-muted)]">Made</div>
+        </div>
+        <div>
+          <div className={`font-bold text-[var(--red)] tabular-nums ${compact ? "text-lg" : "text-2xl"}`}>
+            {missed}
+          </div>
+          <div className="text-xs text-[var(--text-muted)]">Missed</div>
         </div>
         <div>
           <div className={`font-bold text-[var(--accent)] tabular-nums ${compact ? "text-lg" : "text-2xl"}`}>

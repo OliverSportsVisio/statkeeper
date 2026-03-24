@@ -63,8 +63,8 @@ function TimeoutDots({
 export function Scoreboard({ board, events }: Props) {
   const { state, home_team, away_team, settings } = board;
 
-  // Last 5 events for play feed
-  const recentEvents = events.slice(-5).reverse();
+  // All events reversed for play feed (scrollable)
+  const allEvents = events.slice().reverse();
 
   const getPlayerLabel = (event: GameEvent) => {
     const team = event.team === "home" ? home_team : away_team;
@@ -182,17 +182,17 @@ export function Scoreboard({ board, events }: Props) {
         </div>
       )}
 
-      {/* Play feed */}
-      {recentEvents.length > 0 && (
+      {/* Play feed — scrollable */}
+      {allEvents.length > 0 && (
         <div className="glass-card p-4">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-3">
-            Recent Plays
+            Play-by-Play ({allEvents.length})
           </h3>
-          <div className="space-y-2">
-            {recentEvents.map((e) => (
+          <div className="space-y-1.5 max-h-[40vh] lg:max-h-[60vh] overflow-y-auto">
+            {allEvents.map((e) => (
               <div
                 key={e.id}
-                className="flex items-center gap-2 text-sm"
+                className="flex items-center gap-2 text-sm py-1 border-b border-[var(--border-subtle)] last:border-0"
               >
                 <span
                   className="w-2 h-2 rounded-full shrink-0"
@@ -201,14 +201,14 @@ export function Scoreboard({ board, events }: Props) {
                       e.team === "home" ? home_team.color : away_team.color,
                   }}
                 />
-                <span className="text-[var(--text-primary)] font-medium">
+                <span className="text-[var(--text-primary)] font-medium truncate">
                   {getPlayerLabel(e)}
                 </span>
-                <span className="text-[var(--text-muted)]">
+                <span className="text-[var(--text-muted)] truncate">
                   {formatStatType(e.stat_type)}
                 </span>
                 {e.points > 0 && (
-                  <span className="text-[var(--green)] font-bold ml-auto">
+                  <span className="text-[var(--green)] font-bold ml-auto shrink-0">
                     +{e.points}
                   </span>
                 )}
