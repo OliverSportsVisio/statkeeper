@@ -128,73 +128,73 @@ export function ChainPrompt({
   // ── REBOUND PROMPT ──
   if (chain.type === "rebound_prompt") {
     return (
-      <div className="chain-bar px-3 py-2 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-[var(--accent)]">
-            Rebound?
-          </span>
-          <button
-            onClick={skipChain}
-            className="ml-auto text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] px-2 py-1 rounded"
-          >
-            Skip
-          </button>
-        </div>
-        <div className="flex gap-3">
-          {/* Home team rebounds */}
-          <div className="flex-1">
-            <div className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: homeColor }}>
-              {homeName}
-            </div>
-            <div className="flex flex-wrap gap-1">
-              {homePlayers.map((p) => (
-                <PlayerChip
-                  key={p.id}
-                  player={p}
-                  color={homeColor}
-                  small
-                  onClick={() => {
-                    // Determine OFF vs DEF based on who missed
-                    // If we don't know, infer from last missed shot event
-                    const lastMiss = [...events].reverse().find(
-                      (e) => e.stat_type.endsWith("_miss")
-                    );
-                    const rebType: StatType =
-                      lastMiss && lastMiss.team === "home"
-                        ? "offensive_rebound"
-                        : "defensive_rebound";
-                    recordChainEvent(rebType, p.id, "home", chain.triggerEventId);
-                    skipChain();
-                  }}
-                />
-              ))}
-            </div>
+      <div className="chain-bar px-3 py-3 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]">
+        <div className="flex flex-col items-center gap-2">
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-bold uppercase tracking-wider text-[var(--accent)]">
+              Rebound?
+            </span>
+            <button
+              onClick={skipChain}
+              className="chain-player-chip text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text-secondary)] px-3 py-1.5 rounded-lg bg-[var(--bg-base)] border border-[var(--border-subtle)]"
+            >
+              Skip
+            </button>
           </div>
-          {/* Away team rebounds */}
-          <div className="flex-1">
-            <div className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: awayColor }}>
-              {awayName}
+          <div className="flex gap-6 justify-center">
+            {/* Home team rebounds */}
+            <div className="text-center">
+              <div className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: homeColor }}>
+                {homeName}
+              </div>
+              <div className="flex flex-wrap justify-center gap-1">
+                {homePlayers.map((p) => (
+                  <PlayerChip
+                    key={p.id}
+                    player={p}
+                    color={homeColor}
+                    small
+                    onClick={() => {
+                      const lastMiss = [...events].reverse().find(
+                        (e) => e.stat_type.endsWith("_miss")
+                      );
+                      const rebType: StatType =
+                        lastMiss && lastMiss.team === "home"
+                          ? "offensive_rebound"
+                          : "defensive_rebound";
+                      recordChainEvent(rebType, p.id, "home", chain.triggerEventId);
+                      skipChain();
+                    }}
+                  />
+                ))}
+              </div>
             </div>
-            <div className="flex flex-wrap gap-1">
-              {awayPlayers.map((p) => (
-                <PlayerChip
-                  key={p.id}
-                  player={p}
-                  color={awayColor}
-                  small
-                  onClick={() => {
-                    const lastMiss = [...events].reverse().find(
-                      (e) => e.stat_type.endsWith("_miss")
-                    );
-                    const rebType: StatType =
-                      lastMiss && lastMiss.team === "away"
-                        ? "offensive_rebound"
-                        : "defensive_rebound";
-                    recordChainEvent(rebType, p.id, "away", chain.triggerEventId);
-                    skipChain();
-                  }}
-                />
-              ))}
+            {/* Away team rebounds */}
+            <div className="text-center">
+              <div className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: awayColor }}>
+                {awayName}
+              </div>
+              <div className="flex flex-wrap justify-center gap-1">
+                {awayPlayers.map((p) => (
+                  <PlayerChip
+                    key={p.id}
+                    player={p}
+                    color={awayColor}
+                    small
+                    onClick={() => {
+                      const lastMiss = [...events].reverse().find(
+                        (e) => e.stat_type.endsWith("_miss")
+                      );
+                      const rebType: StatType =
+                        lastMiss && lastMiss.team === "away"
+                          ? "offensive_rebound"
+                          : "defensive_rebound";
+                      recordChainEvent(rebType, p.id, "away", chain.triggerEventId);
+                      skipChain();
+                    }}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -239,33 +239,33 @@ export function ChainPrompt({
     const ftCountIfShooting = getFtCountForShootingFoul(lastShot?.stat_type ?? null);
 
     return (
-      <div className="chain-bar px-3 py-2 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]">
-        <div className="flex items-center gap-2 mb-2">
+      <div className="chain-bar px-3 py-3 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]">
+        <div className="flex flex-col items-center gap-2">
           <span className="text-xs font-bold uppercase tracking-wider text-[var(--yellow)]">
             Shooting Foul?
           </span>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => {
-              setChain({
-                type: "ft_shooter_select",
-                shootingTeam,
-                ftCount: ftCountIfShooting,
-                isTechnical: false,
-                isFlagrant: false,
-              });
-            }}
-            className="flex-1 py-3 rounded-lg text-sm font-bold bg-[rgba(66,245,102,0.15)] text-[var(--green)]"
-          >
-            Yes — {ftCountIfShooting} FT{ftCountIfShooting > 1 ? "s" : ""}
-          </button>
-          <button
-            onClick={skipChain}
-            className="flex-1 py-3 rounded-lg text-sm font-bold bg-[var(--bg-surface)] text-[var(--text-muted)] border border-[var(--border-subtle)]"
-          >
-            No — Non-Shooting
-          </button>
+          <div className="flex gap-2 w-full max-w-sm">
+            <button
+              onClick={() => {
+                setChain({
+                  type: "ft_shooter_select",
+                  shootingTeam,
+                  ftCount: ftCountIfShooting,
+                  isTechnical: false,
+                  isFlagrant: false,
+                });
+              }}
+              className="chain-player-chip flex-1 py-3 rounded-lg text-sm font-bold bg-[rgba(66,245,102,0.15)] text-[var(--green)]"
+            >
+              Yes — {ftCountIfShooting} FT{ftCountIfShooting > 1 ? "s" : ""}
+            </button>
+            <button
+              onClick={skipChain}
+              className="chain-player-chip flex-1 py-3 rounded-lg text-sm font-bold bg-[var(--bg-surface)] text-[var(--text-muted)] border border-[var(--border-subtle)]"
+            >
+              No — Non-Shooting
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -313,20 +313,21 @@ export function ChainPrompt({
 
     return (
       <div className="chain-bar px-3 py-3 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-xs font-bold uppercase tracking-wider" style={{ color }}>
-            FT {chain.attemptNum}/{chain.totalAttempts}
-          </span>
-          <span className="text-sm font-bold text-[var(--text-primary)]">
-            {shooterLabel}
-          </span>
-          {chain.isTechnical && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-[rgba(255,92,92,0.15)] text-[var(--red)] font-semibold">
-              TECH
+        <div className="flex flex-col items-center gap-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold uppercase tracking-wider" style={{ color }}>
+              FT {chain.attemptNum}/{chain.totalAttempts}
             </span>
-          )}
-        </div>
-        <div className="flex gap-3">
+            <span className="text-sm font-bold text-[var(--text-primary)]">
+              {shooterLabel}
+            </span>
+            {chain.isTechnical && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-[rgba(255,92,92,0.15)] text-[var(--red)] font-semibold">
+                TECH
+              </span>
+            )}
+          </div>
+          <div className="flex gap-3 w-full max-w-sm">
           <button
             onClick={() => {
               recordChainEvent("ft_made", chain.shooterId, chain.shooterTeam);
@@ -375,6 +376,7 @@ export function ChainPrompt({
           >
             MISSED
           </button>
+          </div>
         </div>
       </div>
     );
@@ -399,22 +401,24 @@ function ChainBar({
   children: React.ReactNode;
 }) {
   return (
-    <div className="chain-bar px-3 py-2 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]">
-      <div className="flex items-center gap-2 mb-2">
+    <div className="chain-bar px-3 py-3 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]">
+      <div className="flex flex-col items-center gap-2">
         <span
           className="text-xs font-bold uppercase tracking-wider"
           style={{ color }}
         >
           {label}
         </span>
-        <button
-          onClick={onSkip}
-          className="ml-auto text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text-secondary)] px-2 py-1 rounded bg-[var(--bg-base)] border border-[var(--border-subtle)]"
-        >
-          {skipLabel}
-        </button>
+        <div className="flex flex-wrap justify-center gap-1.5">
+          {children}
+          <button
+            onClick={onSkip}
+            className="chain-player-chip rounded-lg text-sm font-semibold text-[var(--text-muted)] hover:text-[var(--text-secondary)] px-3 py-2 bg-[var(--bg-base)] border border-[var(--border-subtle)]"
+          >
+            {skipLabel}
+          </button>
+        </div>
       </div>
-      <div className="flex flex-wrap gap-1.5">{children}</div>
     </div>
   );
 }
