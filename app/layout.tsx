@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Barlow, Barlow_Condensed } from "next/font/google";
 import "./globals.css";
 
@@ -14,10 +14,23 @@ const barlowCondensed = Barlow_Condensed({
   variable: "--font-display",
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+};
+
 export const metadata: Metadata = {
   title: "StatKeeper — Live Basketball Scoreboard & Stats",
   description:
     "Create a live basketball scoreboard, track player stats, shot charts, and share with spectators in real time.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "StatKeeper",
+  },
 };
 
 export default function RootLayout({

@@ -242,6 +242,83 @@ body::after {
   filter: brightness(0.85);
 }
 
+/* ── iPad / Tablet responsive ── */
+
+/* Minimum touch target 44×44px (Apple HIG) */
+@media (pointer: coarse) {
+  .stat-btn {
+    min-height: 44px;
+    font-size: 0.8125rem;
+  }
+  .score-btn {
+    min-height: 56px;
+    font-size: 1.25rem;
+  }
+  .roster-row {
+    min-height: 44px;
+  }
+  .player-chip {
+    min-height: 44px;
+    padding: 0.5rem 1rem;
+  }
+  .quick-action-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .chain-bar button {
+    min-height: 44px;
+  }
+}
+
+/* Chain prompt player chips — larger on touch */
+@media (pointer: coarse) {
+  .chain-player-chip {
+    min-height: 44px;
+    min-width: 52px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* iPad landscape (1024×768 and up) — wider rosters */
+@media (min-width: 768px) and (pointer: coarse) {
+  .keeper-roster {
+    width: 170px;
+  }
+}
+@media (min-width: 1024px) and (pointer: coarse) {
+  .keeper-roster {
+    width: 200px;
+  }
+}
+
+/* iPad portrait (768px) — stack rosters above stats */
+@media (max-width: 767px) {
+  .keeper-layout {
+    flex-direction: column !important;
+  }
+  .keeper-roster {
+    width: 100% !important;
+    overflow-y: visible !important;
+    max-height: none !important;
+  }
+  .keeper-roster .space-y-0\.5 {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+  .keeper-roster .roster-row {
+    width: auto;
+    flex: 0 0 auto;
+    padding: 0.5rem 0.75rem;
+  }
+}
+
+/* Safe area for iPads with home indicator */
+.safe-area-bottom {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
 /* Quick action bar buttons */
 .quick-action-btn {
   cursor: pointer;

@@ -13,6 +13,7 @@ import type {
   PlayType,
   TeamSetup,
   GameSettings,
+  ChainStep,
 } from "./types";
 import {
   createInitialState,
@@ -21,6 +22,7 @@ import {
   advancePeriod,
   pointsForStat,
 } from "./gameEngine";
+import { getNextChain } from "./chainEngine";
 
 /* ──────────────────────────────────────────────
    Zustand Store — single source of truth for
@@ -33,6 +35,9 @@ interface GameStore {
   events: GameEvent[];
   selectedTeam: "home" | "away";
   selectedPlayerId: string | null;
+
+  // Action chain
+  activeChain: ChainStep;
 
   // Actions — board
   createBoard: (
@@ -56,6 +61,10 @@ interface GameStore {
   ) => GameEvent | null;
   undoLastEvent: () => GameEvent | null;
 
+  // Actions — chain
+  setChain: (chain: ChainStep) => void;
+  skipChain: () => void;
+
   // Actions — clock
   setClockRunning: (running: boolean) => void;
   setGameClock: (seconds: number) => void;
@@ -78,6 +87,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   events: [],
   selectedTeam: "home",
   selectedPlayerId: null,
+  activeChain: null,
 
   createBoard: (homeTeam, awayTeam, settings) => {
     const board: Board = {
@@ -93,12 +103,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
         settings,
       } as Board),
     };
-    set({ board, events: [] });
+    set({ board, events: [], activeChain: null });
     return board;
   },
 
   loadBoard: (board, events) => {
-    set({ board, events });
+    set({ board, events, activeChain: null });
   },
 
   setStatus: (status) => {
@@ -131,9 +141,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     const newState = applyEvent(board.state, event);
 
+    // Determine if this event triggers an action chain
+    const nextChain = getNextChain(event, newState);
+
     set({
       board: { ...board, state: newState },
       events: [...events, event],
+      activeChain: nextChain,
     });
 
     return event;
@@ -149,9 +163,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({
       board: { ...board, state: newState },
       events: events.slice(0, -1),
+      activeChain: null, // clear any active chain on undo
     });
 
     return lastEvent;
+  },
+
+  setChain: (chain) => {
+    set({ activeChain: chain });
+  },
+
+  skipChain: () => {
+    set({ activeChain: null });
   },
 
   setClockRunning: (running) => {

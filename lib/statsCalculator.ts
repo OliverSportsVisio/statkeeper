@@ -56,6 +56,7 @@ export function calcPlayerBoxScore(
       case "turnover":
         to++; break;
       case "personal_foul":
+      case "offensive_foul":
       case "technical_foul":
       case "flagrant_foul":
         pf++; break;

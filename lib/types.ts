@@ -67,10 +67,23 @@ export type StatType =
   | "steal"
   | "block"
   | "personal_foul"
+  | "offensive_foul"
   | "technical_foul"
   | "flagrant_foul"
   | "sub_in"
   | "sub_out";
+
+/* ── Action Chain State Machine ── */
+
+export type ChainStep =
+  | { type: "assist_prompt"; shooterTeam: "home" | "away"; triggerEventId: string }
+  | { type: "block_prompt"; shooterTeam: "home" | "away"; triggerEventId: string }
+  | { type: "rebound_prompt"; triggerEventId: string }
+  | { type: "steal_prompt"; turnoverTeam: "home" | "away"; triggerEventId: string }
+  | { type: "shooting_foul_prompt"; foulingTeam: "home" | "away"; triggerEventId: string }
+  | { type: "ft_shooter_select"; shootingTeam: "home" | "away"; ftCount: number; isTechnical: boolean; isFlagrant: boolean }
+  | { type: "ft_attempt"; shooterId: string; shooterTeam: "home" | "away"; attemptNum: number; totalAttempts: number; isTechnical: boolean; isFlagrant: boolean }
+  | null;
 
 export type PlayType =
   | "transition"

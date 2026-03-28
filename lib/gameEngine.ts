@@ -64,6 +64,7 @@ export function applyEvent(
 ): GameState {
   const next = { ...state };
   const team = event.team;
+  const other = team === "home" ? "away" : "home";
 
   // Scoring
   if (event.points > 0) {
@@ -71,14 +72,49 @@ export function applyEvent(
     else next.away_score += event.points;
   }
 
-  // Fouls
+  // Fouls (personal, offensive, technical, flagrant)
   if (
     event.stat_type === "personal_foul" ||
+    event.stat_type === "offensive_foul" ||
     event.stat_type === "technical_foul" ||
     event.stat_type === "flagrant_foul"
   ) {
     if (team === "home") next.home_fouls += 1;
     else next.away_fouls += 1;
+  }
+
+  // ── Auto-possession rules ──
+  switch (event.stat_type) {
+    // Made field goal → possession flips
+    case "2pt_made":
+    case "3pt_made":
+      next.possession = other;
+      break;
+
+    // Defensive rebound → possession to rebounding team
+    case "defensive_rebound":
+      next.possession = team;
+      break;
+
+    // Offensive rebound → possession stays with rebounding team
+    case "offensive_rebound":
+      next.possession = team;
+      break;
+
+    // Steal → possession to stealing team
+    case "steal":
+      next.possession = team;
+      break;
+
+    // Turnover → possession flips
+    case "turnover":
+      next.possession = other;
+      break;
+
+    // Offensive foul → possession flips (turnover implied)
+    case "offensive_foul":
+      next.possession = other;
+      break;
   }
 
   return next;
@@ -99,6 +135,7 @@ export function revertEvent(
 
   if (
     event.stat_type === "personal_foul" ||
+    event.stat_type === "offensive_foul" ||
     event.stat_type === "technical_foul" ||
     event.stat_type === "flagrant_foul"
   ) {
